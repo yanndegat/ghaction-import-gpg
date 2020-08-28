@@ -45,13 +45,14 @@ async function run(): Promise<void> {
       await gpg.configureAgent(gpg.agentConfig);
 
       core.info('📌 Getting keygrip');
-      const keygrip = await gpg.getKeygrip(privateKey.fingerprint);
-      core.debug(`${keygrip}`);
+      const keygrips = await gpg.getKeygrips(privateKey.fingerprint);
 
-      core.info('🔓 Presetting passphrase');
-      await gpg.presetPassphrase(keygrip, process.env.PASSPHRASE).then(stdout => {
-        core.debug(stdout);
-      });
+      for (var i = 0; i < keygrips.length; i++) {
+        core.info(`🔓 Presetting passphrase for ${keygrips[i]}`);
+        await gpg.presetPassphrase(keygrips[i], process.env.PASSPHRASE).then(stdout => {
+          core.debug(stdout);
+        });
+      }
     }
 
     core.info('🛒 Setting outputs...');

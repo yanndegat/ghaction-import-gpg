@@ -1077,12 +1077,13 @@ function run() {
                 core.info('⚙️ Configuring GnuPG agent');
                 yield gpg.configureAgent(gpg.agentConfig);
                 core.info('📌 Getting keygrip');
-                const keygrip = yield gpg.getKeygrip(privateKey.fingerprint);
-                core.debug(`${keygrip}`);
-                core.info('🔓 Presetting passphrase');
-                yield gpg.presetPassphrase(keygrip, process.env.PASSPHRASE).then(stdout => {
-                    core.debug(stdout);
-                });
+                const keygrips = yield gpg.getKeygrips(privateKey.fingerprint);
+                for (var i = 0; i < keygrips.length; i++) {
+                    core.info(`🔓 Presetting passphrase for ${keygrips[i]}`);
+                    yield gpg.presetPassphrase(keygrips[i], process.env.PASSPHRASE).then(stdout => {
+                        core.debug(stdout);
+                    });
+                }
             }
             core.info('🛒 Setting outputs...');
             core.setOutput('fingerprint', privateKey.fingerprint);
@@ -1184,7 +1185,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.killAgent = exports.deleteKey = exports.presetPassphrase = exports.configureAgent = exports.getKeygrip = exports.importKey = exports.getDirs = exports.getVersion = exports.agentConfig = void 0;
+exports.killAgent = exports.deleteKey = exports.presetPassphrase = exports.configureAgent = exports.getKeygrips = exports.importKey = exports.getDirs = exports.getVersion = exports.agentConfig = void 0;
 const fs = __importStar(__webpack_require__(747));
 const path = __importStar(__webpack_require__(622));
 const os = __importStar(__webpack_require__(87));
@@ -1289,19 +1290,18 @@ exports.importKey = (armoredText) => __awaiter(void 0, void 0, void 0, function*
         fs.unlinkSync(keyPath);
     });
 });
-exports.getKeygrip = (fingerprint) => __awaiter(void 0, void 0, void 0, function* () {
+exports.getKeygrips = (fingerprint) => __awaiter(void 0, void 0, void 0, function* () {
     return yield exec.exec('gpg', ['--batch', '--with-colons', '--with-keygrip', '--list-secret-keys', fingerprint], true).then(res => {
         if (res.stderr != '' && !res.success) {
             throw new Error(res.stderr);
         }
-        let keygrip = '';
+        let keygrips = [];
         for (let line of res.stdout.replace(/\r/g, '').trim().split(/\n/g)) {
             if (line.startsWith('grp')) {
-                keygrip = line.replace(/(grp|:)/g, '').trim();
-                break;
+                keygrips.push(line.replace(/(grp|:)/g, '').trim());
             }
         }
-        return keygrip;
+        return keygrips;
     });
 });
 exports.configureAgent = (config) => __awaiter(void 0, void 0, void 0, function* () {
