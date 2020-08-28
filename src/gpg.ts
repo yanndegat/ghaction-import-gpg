@@ -123,19 +123,19 @@ export const importKey = async (armoredText: string): Promise<string> => {
     });
 };
 
-export const getKeygrip = async (fingerprint: string): Promise<string> => {
+export const getKeygrips = async (fingerprint: string): Promise<Array<string>> => {
   return await exec.exec('gpg', ['--batch', '--with-colons', '--with-keygrip', '--list-secret-keys', fingerprint], true).then(res => {
     if (res.stderr != '' && !res.success) {
       throw new Error(res.stderr);
     }
-    let keygrip: string = '';
+    let keygrips: Array<string> = [];
     for (let line of res.stdout.replace(/\r/g, '').trim().split(/\n/g)) {
       if (line.startsWith('grp')) {
         keygrip = line.replace(/(grp|:)/g, '').trim();
-        //break; dont break; return the last keygrip found instead
+        keygrips.push(keygrip);
       }
     }
-    return keygrip;
+    return keygrips;
   });
 };
 
