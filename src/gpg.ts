@@ -132,7 +132,7 @@ export const getKeygrip = async (fingerprint: string): Promise<string> => {
     for (let line of res.stdout.replace(/\r/g, '').trim().split(/\n/g)) {
       if (line.startsWith('grp')) {
         keygrip = line.replace(/(grp|:)/g, '').trim();
-        break;
+        //break; dont break; return the last keygrip found instead
       }
     }
     return keygrip;
